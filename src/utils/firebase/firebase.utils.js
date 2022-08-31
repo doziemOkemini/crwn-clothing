@@ -3,14 +3,14 @@ import {
     getAuth, 
     signInWithRedirect, 
     signInWithPopup, 
-    GoogleAuthProvider 
-} from 'firebase/auth'; //// Import the functions you need for authentication
+    GoogleAuthProvider,
+    createUserWithEmailAndPassword
+} from 'firebase/auth'; // Import the functions you need for authentication
 
 import {
     getFirestore, //instantiate our firestore instance
-    doc, //retrieve documents inside of our firestore database
-    getDoc, setDoc, //to get and set data in the documents
-
+    doc, //retrieve documents inside of our firestore database and et a document instance
+    getDoc, setDoc //to get and set data in the documents
 } from 'firebase/firestore';
 
 // Your web app's Firebase configuration
@@ -27,19 +27,29 @@ const firebaseConfig = {
   const firebaseApp = initializeApp(firebaseConfig);
 
   //Intialize Google Authentication
-  const provider = new GoogleAuthProvider();
+  const googleProvider = new GoogleAuthProvider();
 
-  provider.setCustomParameters({ //configuration google wants
+  googleProvider.setCustomParameters({ //configuration google wants
     prompt: "select_account"
   });
 
+  //auth keeps track of the authentication state of the entire application(as the users signs in through diffrent means and methods)
   export const auth = getAuth();
-  export const signInWithGooglePopup = () => signInWithPopup(auth, provider);
+
+  //aynonimous functions that pass in google functions
+  export const signInWithGooglePopup = () => signInWithPopup(auth, googleProvider);
+  export const signInWithGoogleRedirect = () => signInWithRedirect(auth, googleProvider);
 
   export const db = getFirestore(); //instantiate firestore
 
   //Async function that recieves some user authentication object
-  export const createUserDocumentFromAuth = async (userAuth) =>{
+  //user authentication object is what we get back from our google signIn
+  export const createUserDocumentFromAuth = async (
+        userAuth, 
+        additionalInformation = {}
+    ) =>{
+    if (!userAuth) return;
+
     //checking for an existing document reference
     // doc() takes 3 areguments : 1.the database 2.collections 3.an identifier that tells it waht it was
     const userDocRef = doc( db, 'users', userAuth.uid);
@@ -49,6 +59,7 @@ const firebaseConfig = {
     //if user data  does not exist
     //create/set the document with the data from userAuth in my collection
     if(!userSnapshot.exists()){
+        // fields on the userAuth Object
         const{ displayName, email } = userAuth;
         const createdAt = new Date();
 
@@ -56,7 +67,8 @@ const firebaseConfig = {
             await setDoc(userDocRef, {
                 displayName,
                 email,
-                createdAt
+                createdAt,
+                ...additionalInformation
             })
         }catch(error){
             console.log('error creating the user', error.message);
@@ -64,11 +76,13 @@ const firebaseConfig = {
     }
 
     //if user data exists
-    return userDocRef;
-
-    
-
-    
-
     //return userDocRef
+    return userDocRef; 
+  };
+
+  export const createAuthUserWithEmailAndPassword = async (email, password) => {
+    if(!email || !password) return;
+
+    return await createUserWithEmailAndPassword(auth, email, password);
+
   }
