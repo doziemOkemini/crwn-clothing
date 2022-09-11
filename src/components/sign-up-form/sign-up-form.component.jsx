@@ -1,6 +1,8 @@
-import React, {useState} from 'react'
+import React, {useState} from 'react';
+
 import  FormInput  from '../form-input/form-input.component';
 import Button from '../button/button.component';
+
 import { 
     createAuthUserWithEmailAndPassword, 
     createUserDocumentFromAuth 
@@ -19,8 +21,6 @@ const defaultFormFields = {
 const SignUpForm = () => {
     const [formFields, setFormFields] = useState(defaultFormFields)
     const {displayName, email, password, confirmPassword} = formFields;
-
-    console.log(formFields);
 
     const resetFormFields = () => {
         setFormFields(defaultFormFields);
@@ -41,7 +41,7 @@ const SignUpForm = () => {
                 password
             ); 
 
-            await createUserDocumentFromAuth(user, {displayName}); //getting the user display name
+            await createUserDocumentFromAuth(user, {displayName}); // Building a user document object and getting the user display name
             resetFormFields();
 
         } catch(error){
